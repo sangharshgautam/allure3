@@ -1,0 +1,41 @@
+# Copy this snippet into the test workflow of a PRIVATE project.
+#
+# Prerequisites (one-time):
+#   1. Create a fine-grained PAT with Contents: Read-only + this hub repo only,
+#      save it as the HUB_TOKEN secret in the private repo.
+#   2. Replace <owner>/<hub-repo> below (e.g. sangharsh/allure3).
+#
+# Works with native allure-results (JSON) or plain JUnit XML files —
+# Allure 3 auto-detects the format. Just point "path" at whichever you produce.
+
+name: Tests
+
+on: [push]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Run tests
+        run: |
+          # Run your tests so they produce results, e.g.:
+          #   allure-results/            (native Allure results, any framework)
+          #   test-results/*.xml         (JUnit XML from any framework)
+          echo "add your test command here"
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results
+          path: allure-results   # or: test-results/**/*.xml
+
+      - name: Publish Allure report to hub
+        if: always()
+        uses: <owner>/<hub-repo>/.github/workflows/publish-report.yml@main
+        with:
+          project: my-project
+          hub-repo: <owner>/<hub-repo>
+        secrets: inherit

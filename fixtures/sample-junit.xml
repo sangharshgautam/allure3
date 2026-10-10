@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuites>
+  <testsuite name="com.example.smoke.LoginSuite" tests="4" failures="1" skipped="1" time="1.85" timestamp="2026-10-10T09:00:00">
+    <testcase classname="com.example.smoke.LoginSuite" name="loginWithValidCredentials" time="0.42"/>
+    <testcase classname="com.example.smoke.LoginSuite" name="loginWithInvalidPassword" time="0.31">
+      <failure message="expected login to fail with status 401">java.lang.AssertionError: expected status 401 but was 500
+	at com.example.smoke.LoginSuite.loginWithInvalidPassword(LoginSuite.java:42)</failure>
+    </testcase>
+    <testcase classname="com.example.smoke.LoginSuite" name="logoutClearsSession" time="0.55"/>
+    <testcase classname="com.example.smoke.LoginSuite" name="passwordResetFlow" time="0.57">
+      <skipped/>
+    </testcase>
+  </testsuite>
+  <testsuite name="com.example.smoke.ApiSuite" tests="2" failures="0" skipped="0" time="0.9" timestamp="2026-10-10T09:01:00">
+    <testcase classname="com.example.smoke.ApiSuite" name="healthEndpointReturnsOk" time="0.12"/>
+    <testcase classname="com.example.smoke.ApiSuite" name="versionEndpointReturnsSemver" time="0.08"/>
+  </testsuite>
+</testsuites>

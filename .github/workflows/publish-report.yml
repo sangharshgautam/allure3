@@ -1,0 +1,170 @@
+name: Publish Allure report
+
+on:
+  workflow_call:
+    inputs:
+      project:
+        description: Project name (letters, digits, dot, dash, underscore)
+        required: true
+        type: string
+      hub-repo:
+        description: This hub repository, e.g. "yourname/allure3"
+        required: true
+        type: string
+      results-path:
+        description: Path to the uploaded "test-results" artifact (allure-results dir or JUnit XML files)
+        required: false
+        type: string
+        default: test-results
+      history-runs:
+        description: Max number of runs kept in history.jsonl (trend depth)
+        required: false
+        type: number
+        default: 30
+    secrets:
+      HUB_TOKEN:
+        required: false
+  workflow_dispatch:
+    inputs:
+      project:
+        description: Project name (letters, digits, dot, dash, underscore)
+        required: true
+        type: string
+      hub-repo:
+        description: Hub repo override (defaults to this repository)
+        required: false
+        type: string
+        default: ""
+      history-runs:
+        description: Max number of runs kept in history.jsonl
+        required: false
+        type: string
+        default: "30"
+
+permissions:
+  actions: read
+  contents: write
+
+# One global queue so concurrent publishes from different projects
+# cannot race each other's push to the gh-pages branch.
+concurrency:
+  group: allure-publish
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    env:
+      PROJECT: ${{ inputs.project }}
+      HUB_REPO: ${{ inputs.hub-repo || github.repository }}
+      HISTORY_RUNS: ${{ inputs.history-runs || 30 }}
+      TOKEN: ${{ secrets.HUB_TOKEN || github.token }}
+    steps:
+      - name: Validate inputs
+        run: |
+          if [[ ! "$PROJECT" =~ ^[A-Za-z0-9][A-Za-z0-9._-]*$ ]]; then
+            echo "Invalid project name: $PROJECT" >&2
+            exit 1
+          fi
+          if [[ ! "$HUB_REPO" =~ ^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+$ ]]; then
+            echo "Invalid hub-repo: $HUB_REPO" >&2
+            exit 1
+          fi
+
+      - name: Check out hub scripts
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ env.HUB_REPO }}
+          ref: main
+          path: hub
+          token: ${{ env.TOKEN }}
+
+      - name: Check out current site (gh-pages)
+        uses: actions/checkout@v4
+        continue-on-error: true
+        with:
+          repository: ${{ env.HUB_REPO }}
+          ref: gh-pages
+          path: site
+          token: ${{ env.TOKEN }}
+
+      - name: Download test results artifact
+        if: github.event_name != 'workflow_dispatch'
+        uses: actions/download-artifact@v4
+        with:
+          name: test-results
+          path: results
+
+      - name: Use bundled fixture results (smoke test)
+        if: github.event_name == 'workflow_dispatch'
+        run: mkdir -p results && cp hub/fixtures/sample-junit.xml results/
+
+      - name: Prepare site directories
+        run: |
+          rm -rf site/.git
+          mkdir -p site "site/data/$PROJECT"
+          touch site/.nojekyll "site/data/$PROJECT/history.jsonl"
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Install Allure 3 CLI
+        run: npm install -g allure
+
+      - name: Write Allure config and executor metadata
+        run: |
+          OWNER="${HUB_REPO%%/*}"
+          REPO="${HUB_REPO##*/}"
+          REPORT_URL="https://${OWNER}.github.io/${REPO}/${PROJECT}/latest/"
+          RUN_URL="${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+
+          cat > allurerc.mjs <<EOF
+          export default {
+            name: "${PROJECT} — Allure Report",
+            output: "./site/${PROJECT}/latest",
+            historyPath: "./site/data/${PROJECT}/history.jsonl",
+            appendHistory: true,
+          };
+          EOF
+
+          cat > results/executor.json <<EOF
+          {
+            "buildName": "${{ github.workflow }} #${{ github.run_number }}",
+            "buildOrder": ${{ github.run_number }},
+            "buildUrl": "${RUN_URL}",
+            "reportName": "${PROJECT} — Allure Report",
+            "reportUrl": "${REPORT_URL}"
+          }
+          EOF
+
+          cat > "site/data/$PROJECT/meta.json" <<EOF
+          {
+            "project": "${PROJECT}",
+            "buildNumber": ${{ github.run_number }},
+            "runId": "${{ github.run_id }}",
+            "runUrl": "${RUN_URL}",
+            "reportUrl": "${REPORT_URL}",
+            "timestamp": $(date +%s000),
+            "sourceRepo": "${{ github.repository }}"
+          }
+          EOF
+
+      - name: Generate Allure report
+        run: allure generate results
+
+      - name: Trim history and rebuild dashboard
+        run: |
+          node hub/scripts/trim-history.mjs "site/data/$PROJECT/history.jsonl" "$HISTORY_RUNS"
+          node hub/scripts/build-dashboard.mjs site
+
+      - name: Push site to gh-pages
+        working-directory: site
+        run: |
+          git init -b gh-pages
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -m "Publish ${PROJECT} (run ${{ github.run_id }})"
+          git push --force "https://x-access-token:${TOKEN}@github.com/${HUB_REPO}.git" gh-pages
