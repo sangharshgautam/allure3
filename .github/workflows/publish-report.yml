@@ -11,8 +11,8 @@ on:
         description: This hub repository, e.g. "yourname/allure3"
         required: true
         type: string
-      results-path:
-        description: Path to the uploaded "test-results" artifact (allure-results dir or JUnit XML files)
+      artifact-name:
+        description: Name of the uploaded artifact containing test results (allure-results or JUnit XML)
         required: false
         type: string
         default: test-results
@@ -92,7 +92,7 @@ jobs:
         if: github.event_name != 'workflow_dispatch'
         uses: actions/download-artifact@v4
         with:
-          name: test-results
+          name: ${{ inputs.artifact-name }}
           path: results
 
       - name: Use bundled fixture results (smoke test)

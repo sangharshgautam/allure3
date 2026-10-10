@@ -10,7 +10,7 @@ run tests (any framework)                .github/workflows/publish-report.yml
 upload-artifact "test-results"  ──────►  scripts/trim-history.mjs
 uses: <owner>/<hub>/.github/             data/<project>/history.jsonl  (trends)
   workflows/publish-report.yml@main      <project>/latest/             (report)
-secrets: inherit (HUB_TOKEN)             index.html                    (dashboard)
+secrets: HUB_TOKEN (PAT)                 index.html                    (dashboard)
                                          ──► https://<owner>.github.io/<hub>/
 ```
 
@@ -33,11 +33,12 @@ secrets: inherit (HUB_TOKEN)             index.html                    (dashboar
    - Resource owner: your account; repository access: **only this hub repo**.
    - Permissions: **Contents: Read and write**.
 2. Save it as the secret `HUB_TOKEN` in the **private** repo.
-3. Add the snippet from [`examples/publish-report.yml`](examples/publish-report.yml) to the private repo's test workflow — change `project:` (unique name, e.g. `billing-api`) and `<owner>/<hub-repo>`.
+3. Add the snippet from [`examples/publish-report.yml`](examples/publish-report.yml) to the private repo's test workflow — change `project:` (unique name, e.g. `billing-api`) and `<owner>/<hub-repo>` (e.g. `sangharshgautam/allure3`).
    - `upload-artifact` + the publish step should use `if: always()` so failing tests still publish reports.
    - Point `path` at your `allure-results/` directory or your JUnit `*.xml` files.
+   - If your artifact isn't named `test-results`, pass `artifact-name:` to match it.
 
-That's it — the dashboard row appears after the first run; the trend chart appears inside the report from the second run on.
+That's it — the dashboard card appears after the first run; the trend chart appears inside the report from the second run on.
 
 ## How a publish works
 

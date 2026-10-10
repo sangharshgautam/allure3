@@ -1,9 +1,9 @@
 # Copy this snippet into the test workflow of a PRIVATE project.
 #
 # Prerequisites (one-time):
-#   1. Create a fine-grained PAT with Contents: Read-only + this hub repo only,
-#      save it as the HUB_TOKEN secret in the private repo.
-#   2. Replace <owner>/<hub-repo> below (e.g. sangharsh/allure3).
+#   1. Create a fine-grained PAT with "Contents: Read and write" for the HUB repo
+#      only, and save it as the HUB_TOKEN secret in this private repo.
+#   2. Replace <owner>/<hub-repo> below (e.g. sangharshgautam/allure3).
 #
 # Works with native allure-results (JSON) or plain JUnit XML files —
 # Allure 3 auto-detects the format. Just point "path" at whichever you produce.
@@ -38,4 +38,7 @@ jobs:
         with:
           project: my-project
           hub-repo: <owner>/<hub-repo>
-        secrets: inherit
+          # artifact-name: test-results   # must match the upload step above
+          # history-runs: 30
+        secrets:
+          HUB_TOKEN: ${{ secrets.HUB_TOKEN }}
