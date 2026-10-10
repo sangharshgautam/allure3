@@ -48,7 +48,9 @@ That's it — the dashboard row appears after the first run; the trend chart app
 
 ## Dashboard
 
-`index.html` is regenerated on every publish: one row per project with pass/fail badge, passed/failed/broken/skipped counts, duration, build number, last-run age, a link to the latest report and to the CI run that produced it.
+`index.html` is regenerated on every publish and styled like [Allure 3's own dashboard](https://allure-framework.github.io/allure3-demo/): a responsive grid of cards, most recently run first. Each card shows the source repo, project name, run date, a status pill + duration, new/flaky/retry counts, a success-rate donut built from the run's statistics, a Total/Passed/Failed/Broken/Skipped breakdown, the build number, and a link to the CI run. Clicking anywhere on a card opens that project's latest report.
+
+Unlike the demo — which is a single `allure generate` run listing several plugins — this landing page collates independently published projects, so each project keeps its own report and history while still appearing on one dashboard.
 
 ## Limits & retention
 
