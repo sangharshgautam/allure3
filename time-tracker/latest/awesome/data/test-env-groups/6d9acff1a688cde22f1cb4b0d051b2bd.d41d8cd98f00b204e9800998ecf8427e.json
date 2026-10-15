@@ -1,0 +1,1 @@
+{"id":"6d9acff1a688cde22f1cb4b0d051b2bd.d41d8cd98f00b204e9800998ecf8427e","fullName":"com.timetracker.model.ProjectTimeDataTest.getWeekActiveMsReturnsZeroWhenNoRecords","name":"getWeekActiveMsReturnsZeroWhenNoRecords","status":"passed","testResultsByEnv":{"default":"92642b59b7dc4842dcde8852282ec10f"}}
