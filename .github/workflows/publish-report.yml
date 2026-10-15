@@ -72,7 +72,7 @@ jobs:
           fi
 
       - name: Check out hub scripts
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           repository: ${{ env.HUB_REPO }}
           ref: main
@@ -80,7 +80,7 @@ jobs:
           token: ${{ env.TOKEN }}
 
       - name: Check out current site (gh-pages)
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         continue-on-error: true
         with:
           repository: ${{ env.HUB_REPO }}
@@ -90,7 +90,7 @@ jobs:
 
       - name: Download test results artifact
         if: github.event_name != 'workflow_dispatch'
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           name: ${{ inputs.artifact-name }}
           path: results
@@ -106,7 +106,7 @@ jobs:
           touch site/.nojekyll "site/data/$PROJECT/history.jsonl"
 
       - name: Set up Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v7
         with:
           node-version: 22
 
