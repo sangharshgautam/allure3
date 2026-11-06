@@ -53,7 +53,7 @@ concurrency:
 
 jobs:
   publish:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     env:
       PROJECT: ${{ inputs.project }}
       HUB_REPO: ${{ inputs.hub-repo || github.repository }}
