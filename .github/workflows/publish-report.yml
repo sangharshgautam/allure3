@@ -154,7 +154,7 @@ jobs:
           EOF
 
       - name: Generate Allure report
-        run: allure generate results
+        run: allure generate results --clean
 
       - name: Trim history and rebuild dashboard
         run: |
