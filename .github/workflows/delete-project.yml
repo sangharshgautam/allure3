@@ -1,0 +1,67 @@
+name: Delete Allure project
+run-name: Delete Project (${{ inputs.project }})
+
+on:
+  workflow_dispatch:
+    inputs:
+      project:
+        description: Project name to delete (letters, digits, dot, dash, underscore)
+        required: true
+        type: string
+
+permissions:
+  contents: write
+
+jobs:
+  delete:
+    runs-on: ubuntu-26.04
+    steps:
+      - name: Validate Author
+        run: |
+          if [[ "${{ github.actor }}" != "${{ github.repository_owner }}" ]]; then
+            echo "Error: Only the repository owner (${{ github.repository_owner }}) can delete projects." >&2
+            exit 1
+          fi
+
+      - name: Validate project name
+        run: |
+          PROJECT="${{ inputs.project }}"
+          if [[ ! "$PROJECT" =~ ^[A-Za-z0-9][A-Za-z0-9._-]*$ ]]; then
+            echo "Invalid project name: $PROJECT" >&2
+            exit 1
+          fi
+
+      - name: Check out hub scripts
+        uses: actions/checkout@v7
+        with:
+          ref: main
+          path: hub
+
+      - name: Check out current site (gh-pages)
+        uses: actions/checkout@v7
+        continue-on-error: true
+        with:
+          ref: gh-pages
+          path: site
+
+      - name: Remove project report and history
+        run: |
+          PROJECT="${{ inputs.project }}"
+          rm -rf "site/$PROJECT" "site/data/$PROJECT"
+          mkdir -p site
+          touch site/.nojekyll
+
+      - name: Rebuild dashboard
+        run: |
+          node hub/scripts/build-dashboard.mjs site
+
+      - name: Push updated site to gh-pages
+        working-directory: site
+        run: |
+          PROJECT="${{ inputs.project }}"
+          git init -b gh-pages
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -m "Delete project ${PROJECT}" || echo "No changes to commit"
+          git push --force origin gh-pages
