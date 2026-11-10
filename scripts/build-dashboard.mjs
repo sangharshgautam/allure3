@@ -154,6 +154,11 @@ const cards = projects
         ].join("")
       : "";
 
+    const footerInfo = [
+      meta.buildNumber != null ? `Build #${meta.buildNumber}` : "",
+      createdAt ? formatDate(createdAt) : "",
+    ].filter(Boolean).join(" · ");
+
     return {
       createdAt,
       html: `<article class="card">
@@ -162,7 +167,6 @@ const cards = projects
           <div class="header">
             <code class="source">${esc(source)}</code>
             <h2 class="title"><a class="card-link" href="${esc(project)}/latest/">${esc(project)}</a></h2>
-            ${createdAt ? `<time class="created" datetime="${new Date(createdAt).toISOString()}">${esc(formatDate(createdAt))}</time>` : ""}
             <p class="status-line">
               <span class="status status-${esc(status)}">${esc(statusLabel)}</span>
               <span class="in">in <b>${esc(formatDuration(duration))}</b></span>
@@ -180,7 +184,7 @@ const cards = projects
       </div>
       <div class="stats">${statsRow}</div>
       <div class="card-footer">
-        <span>${meta.buildNumber != null ? "Build #" + esc(meta.buildNumber) : ""}</span>
+        <span>${esc(footerInfo)}</span>
         ${meta.runUrl ? `<a class="ci" href="${esc(meta.runUrl)}" target="_blank" rel="noreferrer">CI run ↗</a>` : ""}
       </div>
     </article>`,

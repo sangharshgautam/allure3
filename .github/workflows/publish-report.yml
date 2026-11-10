@@ -1,4 +1,5 @@
 name: Publish Allure report
+run-name: Publish Allure Report (${{ inputs.project }})
 
 on:
   workflow_call:
@@ -53,6 +54,7 @@ concurrency:
 
 jobs:
   publish:
+    name: Publish (${{ inputs.project }})
     runs-on: ubuntu-26.04
     env:
       PROJECT: ${{ inputs.project }}
