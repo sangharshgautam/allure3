@@ -25,6 +25,7 @@ on:
     secrets:
       HUB_TOKEN:
         required: false
+
   workflow_dispatch:
     inputs:
       project:
@@ -152,6 +153,10 @@ jobs:
             "sourceRepo": "${{ github.repository }}"
           }
           EOF
+
+      - name: Flatten test results
+        run: |
+          find results -type f \( -name "*.xml" -o -name "*-result.json" \) -exec cp {} results/ \; 2>/dev/null || true
 
       - name: Generate Allure report
         run: allure generate results --clean
